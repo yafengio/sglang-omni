@@ -15,6 +15,7 @@ import sglang_omni.platforms.xpu as xpu_platform
 from sglang_omni.platforms.cpu import CPUOmniPlatform
 from sglang_omni.platforms.cuda import CUDAOmniPlatform
 from sglang_omni.platforms.interface import OmniPlatform
+from sglang_omni.platforms.musa import MUSAOmniPlatform
 from sglang_omni.platforms.rocm import ROCMOmniPlatform
 from sglang_omni.platforms.xpu import XPUOmniPlatform
 
@@ -144,6 +145,20 @@ def test_xpu_platform_resolves_to_the_omni_xpu_platform() -> None:
     assert platform.get_stage_process_env(spec, {"ZE_AFFINITY_MASK": "0,1"}) == {
         "SGLANG_ENABLE_TP_MEMORY_INBALANCE_CHECK": "false"
     }
+
+
+def test_musa_platform_resolves_to_the_omni_musa_platform() -> None:
+    # sglang 0.5.18 has no MusaSRTPlatform to import, so stand in with an
+    # is_musa() stub for the upstream MUSA platform class.
+    class _StubMusaPlatform(SRTPlatform):
+        _enum = PlatformEnum.MUSA
+
+    platform = platforms._as_omni_platform(_StubMusaPlatform())
+
+    assert type(platform) is MUSAOmniPlatform
+    # sgl-kernel's AOT fused_qk_norm_rope is CUDA-only; MUSA must keep the
+    # native fallback instead of inheriting the CUDA platform's kernel.
+    assert platform.get_fused_qk_norm_rope() is None
 
 
 def test_xpu_names_the_decode_graph_backend_sglang_leaves_off() -> None:

@@ -14,14 +14,6 @@ from sglang_omni.platforms.rocm import ROCMOmniPlatform
 from sglang_omni.platforms.xpu import XPUOmniPlatform
 
 
-def _is_musa_available() -> bool:
-    try:
-        musa = torch.musa
-    except AttributeError:
-        return False
-    return bool(musa.is_available())
-
-
 def _is_npu_available() -> bool:
     try:
         npu = torch.npu
@@ -54,7 +46,7 @@ def _as_omni_platform(platform: SRTPlatform) -> OmniPlatform:
         return CPUOmniPlatform()
     if platform.is_xpu():
         return XPUOmniPlatform()
-    if type(platform) is SRTPlatform and _is_musa_available():
+    if platform.is_musa():
         return MUSAOmniPlatform()
     if type(platform) is SRTPlatform and _is_npu_available():
         return NPUOmniPlatform()
